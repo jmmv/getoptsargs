@@ -1,0 +1,15 @@
+name: Doc
+
+on: [push, pull_request]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        env:
+            RUSTC_WRAPPER: "sccache"
+            SCCACHE_GHA_ENABLED: "true"
+        steps:
+            - uses: actions/checkout@v4
+            - uses: mozilla-actions/sccache-action@v0.0.9
+            - run: cargo +nightly doc -Zunstable-options -Zrustdoc-scrape-examples

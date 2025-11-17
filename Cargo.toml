@@ -1,0 +1,32 @@
+[package]
+name = "getoptsargs"
+version = "0.0.0"
+license = "MIT OR Apache-2.0"
+authors = ["Julio Merino <julio@meroh.net>"]
+categories = ["development-tools"]
+keywords = ["args", "argument", "cli", "parser"]
+description = "Imperative CLI application framework inspired by getopts"
+homepage = "https://github.com/jmmv/getoptsargs/"
+repository = "https://github.com/jmmv/getoptsargs.git"
+readme = "README.md"
+edition = "2024"
+publish = false
+
+[features]
+default = []
+env_logger = ["dep:env_logger"]
+
+[dependencies]
+anyhow = "1"
+env_logger = { version = "0.11", optional = true }
+getopts = "0.2.24"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
+
+[[example]]
+name = "minimal"
+doc-scrape-examples = true
+
+[package.metadata.docs.rs]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
