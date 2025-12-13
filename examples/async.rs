@@ -20,4 +20,4 @@ async fn app_main(_matches: Matches) -> Result<i32> {
     Ok(0)
 }
 
-tokio_app!("minimal", app_setup, app_main);
+tokio_app!("async", app_setup, app_main);

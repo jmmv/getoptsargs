@@ -17,6 +17,58 @@
 use getoptsargs::testutils::*;
 
 #[test]
+fn test_async_no_args_no_output() {
+    check(bin_path("examples/async"), &[], 0, Behavior::Null, Behavior::Null);
+}
+
+#[test]
+fn test_async_help() {
+    check(
+        bin_path("examples/async"),
+        &["--help"],
+        0,
+        Behavior::Inline(
+            "Usage: async [options]
+
+Options:
+    -h, --help          show command-line usage information and exit
+        --version       show version information and exit
+
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+}
+
+#[test]
+fn test_async_version() {
+    check(
+        bin_path("examples/async"),
+        &["--version"],
+        0,
+        Behavior::Inline(format!("async {}\n", env!("CARGO_PKG_VERSION"))),
+        Behavior::Null,
+    );
+}
+
+#[test]
+fn test_async_too_many_args_args_no_output() {
+    check(
+        bin_path("examples/async"),
+        &["foo"],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            "Usage error: Too many arguments
+Type `async --help` for more information
+"
+            .to_owned(),
+        ),
+    );
+}
+
+#[test]
 fn test_minimal_no_args_no_output() {
     check(bin_path("examples/minimal"), &[], 0, Behavior::Null, Behavior::Null);
 }
