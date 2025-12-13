@@ -76,7 +76,7 @@ pub(crate) fn help(
 pub(crate) fn version(stylized_name: &str, copyright: Option<&str>, license: Option<License>) {
     println!("{} {}", stylized_name, env!("CARGO_PKG_VERSION"));
     if let Some(copyright) = copyright {
-        println!("Copyright {}", copyright);
+        println!("{}", copyright);
     }
     if let Some(license) = license {
         println!("License {}", license)

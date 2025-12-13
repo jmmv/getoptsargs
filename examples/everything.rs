@@ -19,7 +19,7 @@ fn app_extra_help() {
 
 fn app_setup(builder: Builder) -> Builder {
     builder
-        .copyright("2025 Julio Merino")
+        .copyright("Copyright 2025 Julio Merino")
         .bugs("https://example.com/everything/issues/")
         .homepage("https://everything.example.com/")
         .manpage("the-everything", "8")

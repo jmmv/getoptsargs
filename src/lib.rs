@@ -132,10 +132,10 @@ impl Builder {
         self
     }
 
-    /// Sets the copyright of the application to `copyright`.  The provided string should _not_
-    /// be prefixed with `Copyright`.
+    /// Sets the copyright of the application to `copyright`.  The provided string must be prefixed
+    /// with `Copyright `.
     pub fn copyright(mut self, copyright: &'static str) -> Self {
-        assert!(!copyright.starts_with("Copyright"));
+        assert!(copyright.starts_with("Copyright "));
         self.app.copyright = Some(copyright);
         self
     }
