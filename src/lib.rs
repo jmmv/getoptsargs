@@ -164,6 +164,21 @@ impl Builder {
         self
     }
 
+    /// Processes arguments as previously configured and handles standard non-configurable
+    /// options like `--help` or `--version`.
+    ///
+    /// Returns `None` if the application should exit immediately _without_ error because one
+    /// of the standard options was processed.  Otherwise, returns a `Matches` object with the
+    /// results of the argument parsing.
+    ///
+    /// Prefer to use the `run` method in conjunction with the `app!` macro to hide the details
+    /// of handling the complex return semantics of the returned type.  This function exists
+    /// only to let you implement a completely imperative program without any flow control
+    /// redirections.
+    pub fn start(self) -> Result<Option<Matches>> {
+        run::pre_run(&self.app, self.opts, self.args, self.env_args)
+    }
+
     /// Starts the application delegating execution to `main`.
     ///
     /// Returns the exit code that the caller must propagate to the caller via `process::exit`.

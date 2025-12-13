@@ -83,6 +83,7 @@ pub(crate) fn version(stylized_name: &str, copyright: Option<&str>, license: Opt
     }
 }
 
+/// Handles non-configurable options before program start (such as `--help` and `--version`).
 pub(crate) fn pre_run(
     app: &App,
     opts: Options,

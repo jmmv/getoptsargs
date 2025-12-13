@@ -146,3 +146,48 @@ Everything home page: https://everything.example.com/
         Behavior::Null,
     );
 }
+
+#[test]
+fn test_imperative_no_args_no_output() {
+    check(bin_path("examples/imperative"), &["a"], 0, Behavior::Null, Behavior::Null);
+}
+
+#[test]
+fn test_imperative_custom_flag() {
+    check(
+        bin_path("examples/imperative"),
+        &["--print-args", "abc", "de fg"],
+        0,
+        Behavior::Inline(
+            r"Free argument: abc
+Free argument: de fg
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+}
+
+#[test]
+fn test_imperative_help() {
+    check(
+        bin_path("examples/imperative"),
+        &["--help"],
+        0,
+        Behavior::Inline(
+            "Usage: imperative [options] [trail1 .. trailN]
+
+Options:
+    -h, --help          show command-line usage information and exit
+        --version       show version information and exit
+        --print-args    print free arguments
+
+Arguments:
+    [trail1 .. trailN]  free arguments
+
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+}
