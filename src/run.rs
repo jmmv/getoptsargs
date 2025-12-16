@@ -15,6 +15,7 @@ use anyhow::Result;
 use getopts::Options;
 use std::env;
 use std::error::Error;
+use std::io;
 use std::path::Path;
 
 /// Consumes and returns the program name from `env::Args`.
@@ -43,7 +44,7 @@ pub(crate) fn help(
     program_name: &str,
     bugs: Option<&str>,
     homepage: Option<&str>,
-    extra_help: Option<fn()>,
+    extra_help: Option<fn(&mut dyn io::Write) -> io::Result<()>>,
     opts: &Options,
     args: &Arguments,
 ) {
@@ -60,7 +61,7 @@ pub(crate) fn help(
     }
 
     if let Some(extra_help) = extra_help {
-        extra_help();
+        let _ = extra_help(&mut io::stdout().lock());
         println!();
     }
 

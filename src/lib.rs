@@ -43,6 +43,7 @@ use anyhow::Result;
 use getopts::Matches as OptionMatches;
 use getopts::Options;
 use std::env;
+use std::io;
 
 mod args;
 use args::{Arguments, Matches as ArgumentMatches};
@@ -80,7 +81,7 @@ struct App {
     manpage: Option<(&'static str, &'static str)>,
     homepage: Option<&'static str>,
     bugs: Option<&'static str>,
-    extra_help: Option<fn()>,
+    extra_help: Option<fn(&mut dyn io::Write) -> io::Result<()>>,
 }
 
 /// Builder for the user-defined application.
@@ -141,7 +142,7 @@ impl Builder {
     }
 
     /// Registers a function that prints additional help when `--help` is requested.
-    pub fn extra_help(mut self, extra_help: fn()) -> Self {
+    pub fn extra_help(mut self, extra_help: fn(&mut dyn io::Write) -> io::Result<()>) -> Self {
         self.app.extra_help = Some(extra_help);
         self
     }
