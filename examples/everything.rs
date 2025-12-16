@@ -13,8 +13,8 @@
 
 use getoptsargs::prelude::*;
 
-fn app_extra_help() {
-    println!("This is an extra help message.");
+fn app_extra_help(output: &mut dyn std::io::Write) -> std::io::Result<()> {
+    writeln!(output, "This is an extra help message.")
 }
 
 fn app_setup(builder: Builder) -> Builder {
