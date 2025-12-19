@@ -75,6 +75,7 @@ pub struct Matches {
 /// Container for the metadata about the user-defined application.
 struct App {
     stylized_name: &'static str,
+    version: &'static str,
     program_name: String,
     copyright: Option<&'static str>,
     license: Option<License>,
@@ -100,11 +101,14 @@ impl Builder {
     /// is used in `--version` output and other places where needed.  This is also used (in its
     /// lowercase form) as the actual program name if program name auto-determination fails.
     ///
+    /// `version` specifies the version of the program, and is typically the value of
+    /// `env!("CARGO_PKG_VERSION")`.
+    ///
     /// `copyright` is a user-provided string that must start with `Copyright` and that provides an
     /// informational copyright message for the user.
     ///
     /// `args` should always be `env::args()`.
-    pub fn new(stylized_name: &'static str, env_args: env::Args) -> Self {
+    pub fn new(stylized_name: &'static str, version: &'static str, env_args: env::Args) -> Self {
         let (program_name, env_args) = run::program_name(env_args, stylized_name.to_lowercase());
 
         let mut opts = Options::new();
@@ -115,6 +119,7 @@ impl Builder {
 
         let app = App {
             stylized_name,
+            version,
             program_name,
             copyright: None,
             license,
@@ -212,7 +217,8 @@ impl Builder {
 macro_rules! app {
     ( $name:literal, $builder:ident, $main:ident ) => {
         fn main() {
-            let mut builder = $crate::Builder::new($name, std::env::args());
+            let mut builder =
+                $crate::Builder::new($name, env!("CARGO_PKG_VERSION"), std::env::args());
             builder = $builder(builder);
             let exit_code = builder.run($main);
             std::process::exit(exit_code);
@@ -226,7 +232,8 @@ macro_rules! tokio_app {
     ( $name:literal, $builder:ident, $main:ident ) => {
         #[tokio::main]
         async fn main() {
-            let mut builder = $crate::Builder::new($name, std::env::args());
+            let mut builder =
+                $crate::Builder::new($name, env!("CARGO_PKG_VERSION"), std::env::args());
             builder = $builder(builder);
             let exit_code = builder.run_async($main).await;
             std::process::exit(exit_code);

@@ -74,8 +74,13 @@ pub(crate) fn help(
 }
 
 /// Prints version information following the GNU Standards format.
-pub(crate) fn version(stylized_name: &str, copyright: Option<&str>, license: Option<License>) {
-    println!("{} {}", stylized_name, env!("CARGO_PKG_VERSION"));
+pub(crate) fn version(
+    stylized_name: &str,
+    version: &str,
+    copyright: Option<&str>,
+    license: Option<License>,
+) {
+    println!("{} {}", stylized_name, version);
     if let Some(copyright) = copyright {
         println!("{}", copyright);
     }
@@ -107,7 +112,7 @@ pub(crate) fn pre_run(
     }
 
     if opt_matches.opt_present("version") {
-        version(app.stylized_name, app.copyright, app.license);
+        version(app.stylized_name, app.version, app.copyright, app.license);
         return Ok(None);
     }
 
