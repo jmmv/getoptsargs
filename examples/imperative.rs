@@ -14,7 +14,7 @@
 use getoptsargs::prelude::*;
 
 fn main() {
-    let result = Builder::new("imperative", std::env::args())
+    let result = Builder::new("imperative", env!("CARGO_PKG_VERSION"), std::env::args())
         .optflag("", "print-args", "print free arguments")
         .trailarg("trail", 0, usize::MAX, "free arguments")
         .start();
