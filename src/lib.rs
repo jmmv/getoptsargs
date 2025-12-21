@@ -65,6 +65,9 @@ pub mod testutils;
 /// Contains the result of options and arguments parsing.
 #[derive(Debug)]
 pub struct Matches {
+    /// The program name.
+    pub program_name: String,
+
     /// The option matches.
     opts: OptionMatches,
 
@@ -83,6 +86,8 @@ struct App {
     homepage: Option<&'static str>,
     bugs: Option<&'static str>,
     extra_help: Option<fn(&mut dyn io::Write) -> io::Result<()>>,
+    #[cfg(feature = "env_logger")]
+    init_env_logger: bool,
 }
 
 /// Builder for the user-defined application.
@@ -127,6 +132,8 @@ impl Builder {
             homepage: None,
             bugs: None,
             extra_help: None,
+            #[cfg(feature = "env_logger")]
+            init_env_logger: true,
         };
 
         Self { app, env_args, opts, args: Arguments::default() }
@@ -167,6 +174,15 @@ impl Builder {
     /// Sets the manual page for the application to `page` in `section`.
     pub fn manpage(mut self, page: &'static str, section: &'static str) -> Self {
         self.app.manpage = Some((page, section));
+        self
+    }
+
+    /// Tells the runtime to _not_ init the env logger so that the caller can do so at the
+    /// best moment (e.g. if the caller is daemonizing and only wants to start console
+    /// logging once a log file has been opened) via an explicit call to `init_env_logger`.
+    #[cfg(feature = "env_logger")]
+    pub fn disable_init_env_logger(mut self) -> Self {
+        self.app.init_env_logger = false;
         self
     }
 

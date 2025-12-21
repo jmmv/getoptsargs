@@ -12,5 +12,7 @@
 
 pub use crate::errors::UsageError;
 pub use crate::licenses::License;
+#[cfg(feature = "env_logger")]
+pub use crate::run::init_env_logger;
 pub use crate::{Builder, Matches, app, tokio_app};
 pub use anyhow::{Result, anyhow, bail};
