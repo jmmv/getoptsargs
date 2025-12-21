@@ -89,6 +89,26 @@ pub(crate) fn version(
     }
 }
 
+/// Initialize the logger with settings that match traditional apps.
+///
+/// This allows apps to use the `log::error`, `log::warn`, and `log::info` macros (by
+/// default, but other levels can be used too) for progress reporting and makes the messages
+/// "blend" with other command line apps.  The default logger configuration generates lines
+/// more suited for log files, not human consumption.
+#[cfg(feature = "env_logger")]
+pub fn init_env_logger<P: Into<String>>(program_name: P) {
+    use std::io::Write;
+    let mut builder =
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"));
+    {
+        let program_name = program_name.into();
+        builder.format(move |buf, record| {
+            writeln!(buf, "{}: {}: {}", program_name, record.level(), record.args())
+        });
+    }
+    builder.init()
+}
+
 /// Handles non-configurable options before program start (such as `--help` and `--version`).
 pub(crate) fn pre_run(
     app: &App,
@@ -119,9 +139,15 @@ pub(crate) fn pre_run(
     let arg_matches = args.parse(opt_matches.free.split_off(0))?;
 
     #[cfg(feature = "env_logger")]
-    env_logger::init();
+    if app.init_env_logger {
+        init_env_logger(&app.program_name);
+    }
 
-    Ok(Some(Matches { opts: opt_matches, args: arg_matches }))
+    Ok(Some(Matches {
+        program_name: app.program_name.clone(),
+        opts: opt_matches,
+        args: arg_matches,
+    }))
 }
 
 pub(crate) fn print_usage_error<E: Error>(app: &App, e: E) {
