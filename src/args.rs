@@ -10,7 +10,7 @@
 
 //! Positional argument parsing.
 
-use crate::{UsageError, bad_usage};
+use crate::errors::{UsageError, bad_usage};
 use std::collections::HashMap;
 
 /// Start of the second column in usage messages.  Matches `getopts`.

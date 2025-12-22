@@ -30,7 +30,7 @@ impl Error for UsageError {}
 
 /// Constructs an `UsageError` from a format string.
 #[macro_export]
-macro_rules! bad_usage {
+macro_rules! __bad_usage__ {
     ($fmt:expr) => {
         $crate::UsageError { message: ($fmt).into() }
     };
@@ -39,3 +39,5 @@ macro_rules! bad_usage {
         $crate::UsageError { message: format!($fmt, $($args)*) }
     };
 }
+
+pub use __bad_usage__ as bad_usage;

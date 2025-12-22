@@ -10,7 +10,7 @@
 
 //! Public types required to implement any app.  Import wholesale.
 
-pub use crate::errors::UsageError;
+pub use crate::errors::{UsageError, bad_usage};
 pub use crate::licenses::License;
 #[cfg(feature = "env_logger")]
 pub use crate::run::init_env_logger;
