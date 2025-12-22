@@ -3,7 +3,7 @@ name: Doc
 on: push
 
 jobs:
-    test:
+    doc:
         runs-on: ubuntu-latest
         timeout-minutes: 15
         env:
