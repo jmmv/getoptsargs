@@ -150,6 +150,11 @@ pub(crate) fn pre_run(
     }))
 }
 
+/// Prints a usage error `e` to stderr.
+///
+/// Usage errors should only display the error message and a very brief mention on how to request
+/// help.  This does not print the full help message by design as that would be distracting, yet
+/// that's what other option parsing libraries like to do.
 pub(crate) fn print_usage_error<E: Error>(app: &App, e: E) {
     eprintln!("Usage error: {}", e);
     match app.manpage {
@@ -161,6 +166,8 @@ pub(crate) fn print_usage_error<E: Error>(app: &App, e: E) {
     }
 }
 
+/// Handles the error returned from the app's main function, printing it to the console in the
+/// correct form and transforming it to the exit status to return to the user.
 pub(crate) fn handle_error(app: &App, e: anyhow::Error) -> i32 {
     if let Some(e) = e.downcast_ref::<UsageError>() {
         print_usage_error(app, e);
