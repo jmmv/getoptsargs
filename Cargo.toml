@@ -1,6 +1,6 @@
 [package]
 name = "getoptsargs"
-version = "0.0.0"
+version = "0.1.0"
 license = "MIT OR Apache-2.0"
 authors = ["Julio Merino <julio@meroh.net>"]
 categories = ["development-tools"]
@@ -10,7 +10,6 @@ homepage = "https://github.com/jmmv/getoptsargs/"
 repository = "https://github.com/jmmv/getoptsargs.git"
 readme = "README.md"
 edition = "2024"
-publish = false
 
 [features]
 default = []
