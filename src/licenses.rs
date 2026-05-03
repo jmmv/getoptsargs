@@ -55,7 +55,7 @@ impl fmt::Display for License {
             Self::AGPL3OrLater => {
                 "GNU Affero General Public License v3.0 or later <https://www.gnu.org/licenses/agpl-3.0.html>"
             }
-            Self::Apache2 => "Apache Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>",
+            Self::Apache2 => "Apache Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>",
             Self::BSD3Clause => "BSD 3-Clause <https://opensource.org/license/bsd-3-clause>",
             Self::GPL2Only => {
                 "GNU General Public License v2.0 only <https://www.gnu.org/licenses/gpl-2.0.html>"
