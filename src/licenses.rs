@@ -19,7 +19,10 @@ pub enum License {
     AGPL3Only,
     AGPL3OrLater,
     Apache2,
+    BSD0Clause,
+    BSD2Clause,
     BSD3Clause,
+    BSD4Clause,
     GPL2Only,
     GPL2OrLater,
     GPL3Only,
@@ -35,7 +38,10 @@ impl License {
             "AGPL-3.0-only" => Some(Self::AGPL3Only),
             "AGPL-3.0-or-later" => Some(Self::AGPL3OrLater),
             "Apache-2.0" => Some(Self::Apache2),
+            "0BSD" => Some(Self::BSD0Clause),
+            "BSD-2-Clause" => Some(Self::BSD2Clause),
             "BSD-3-Clause" => Some(Self::BSD3Clause),
+            "BSD-4-Clause" => Some(Self::BSD4Clause),
             "GPL-2.0-only" => Some(Self::GPL2Only),
             "GPL-2.0-or-later" => Some(Self::GPL2OrLater),
             "GPL-3.0-only" => Some(Self::GPL3Only),
@@ -56,7 +62,10 @@ impl fmt::Display for License {
                 "GNU Affero General Public License v3.0 or later <https://www.gnu.org/licenses/agpl-3.0.html>"
             }
             Self::Apache2 => "Apache Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>",
+            Self::BSD0Clause => "BSD 0-Clause <https://opensource.org/license/0bsd>",
+            Self::BSD2Clause => "BSD 2-Clause <https://opensource.org/license/bsd-2-clause>",
             Self::BSD3Clause => "BSD 3-Clause <https://opensource.org/license/bsd-3-clause>",
+            Self::BSD4Clause => "BSD 4-Clause <https://opensource.org/license/bsd-4-clause>",
             Self::GPL2Only => {
                 "GNU General Public License v2.0 only <https://www.gnu.org/licenses/gpl-2.0.html>"
             }
