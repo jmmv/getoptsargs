@@ -32,11 +32,11 @@ impl Error for UsageError {}
 #[macro_export]
 macro_rules! __bad_usage__ {
     ($fmt:expr) => {
-        $crate::UsageError { message: ($fmt).into() }
+        $crate::prelude::UsageError { message: ($fmt).into() }
     };
 
     ($fmt:expr, $($args:tt)*) => {
-        $crate::UsageError { message: format!($fmt, $($args)*) }
+        $crate::prelude::UsageError { message: format!($fmt, $($args)*) }
     };
 }
 

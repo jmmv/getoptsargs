@@ -167,6 +167,22 @@ File name: f3
 }
 
 #[test]
+fn test_everything_raise_error() {
+    check(
+        bin_path("examples/everything"),
+        &["--raise-error", "p1", "p2", "p3"],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            r"Usage error: Found raise-error flag
+Type `everything --help` or `man 8 the-everything` for more information
+"
+            .to_owned(),
+        ),
+    );
+}
+
+#[test]
 fn test_everything_help() {
     check(
         bin_path("examples/everything"),
@@ -179,6 +195,7 @@ Options:
     -h, --help          show command-line usage information and exit
         --version       show version information and exit
     -p, --print-args    print free arguments
+        --raise-error   raises an explicit usage error
 
 Arguments:
     first               this is the first required argument and contains a
