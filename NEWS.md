@@ -1,5 +1,12 @@
 # Major changes between releases
 
+## Changes in version 0.2.1
+
+**Released on 2026-05-17.**
+
+*   Fixed the `bad_usage` macro so that it can be called from outside of
+    this crate.
+
 ## Changes in version 0.2.0
 
 **Released on 2026-05-03.**
