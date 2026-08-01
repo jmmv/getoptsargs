@@ -11,17 +11,8 @@ jobs:
             SCCACHE_GHA_ENABLED: "true"
         steps:
             - uses: actions/checkout@v6
+            - uses: cargo-bins/cargo-binstall@main
             - uses: mozilla-actions/sccache-action@v0.0.10
             - run: rustup component add clippy rustfmt
-            - run: cargo clippy -- -D warnings
-            - run: cargo clippy --all-features --all-targets -- -D warnings
-            - run: cargo fmt -- --check
-
-    pre-commit:
-        runs-on: ubuntu-latest
-        timeout-minutes: 15
-        steps:
-            - uses: actions/checkout@v6
-            - run: sudo sh -ec 'echo "set man-db/auto-update false" | debconf-communicate; dpkg-reconfigure man-db'
-            - run: sudo apt-get install pre-commit
-            - run: pre-commit run -a
+            - run: cargo binstall --no-confirm prek
+            - run: prek run --all-files

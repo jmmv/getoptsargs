@@ -1,0 +1,60 @@
+# getoptsargs
+# Copyright 2026 Julio Merino.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+# http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+# <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+# option.  This file may not be copied, modified, or distributed
+# except according to those terms.
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+
+[[repos.hooks]]
+id = "check-case-conflict"
+
+[[repos.hooks]]
+id = "check-executables-have-shebangs"
+
+[[repos.hooks]]
+id = "check-merge-conflict"
+
+[[repos.hooks]]
+id = "check-shebang-scripts-are-executable"
+
+[[repos.hooks]]
+id = "check-yaml"
+
+[[repos.hooks]]
+id = "detect-private-key"
+
+[[repos.hooks]]
+id = "double-quote-string-fixer"
+
+[[repos.hooks]]
+id = "end-of-file-fixer"
+
+[[repos.hooks]]
+id = "trailing-whitespace"
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "do-not-submit"
+name = "Check for [D]O NOT SUBMIT markers"
+language = "system"
+entry = "sh"
+args = ["-c", '! grep -rn "[D]O NOT SUBMIT" --exclude-dir=.git --exclude-dir=target .']
+pass_filenames = false
+always_run = true
+
+[[repos.hooks]]
+id = "cargo-rust"
+name = "Check Rust code (clippy + fmt)"
+language = "script"
+entry = "admin/check-rust.sh"
+pass_filenames = false
+always_run = true
