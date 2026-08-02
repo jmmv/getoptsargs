@@ -35,6 +35,9 @@ the [MIT License](LICENSE-MIT) at your discretion.
     which is important in offering high-quality, detail-oriented command line
     tools.
 
+*   Implementing subcommand-based interfaces is possible, and getoptsargs
+    handles all parsing and command dispatching.
+
 ## Lowlights
 
 *   The interface exposed by getoptsargs intentionally mimics the getopts it
@@ -42,10 +45,10 @@ the [MIT License](LICENSE-MIT) at your discretion.
     rough edges and terse names---but that's intentional to keep things simple
     and consistent.
 
-*   There is no support for subcommand-based interfaces.  This is currently out
-    of scope for this library, but if there was interest, it could be added.
+*   Subcommand-based interfaces are possible but limited.  Every subcommand
+    needs to reimplement handling of application-level options.
 
-## Usage
+## Simple usage
 
 The basic structure of a getoptsargs application looks like this:
 
@@ -68,6 +71,39 @@ options and arguments whereas the `app_main` function is the entry point
 that gets executed _after_ parsing the user-supplied command line according
 to what was specified in `app_setup`.
 
+## Command-based interfaces
+
+Applications can register subcommands as well.  Each command is represented by
+a pair of `setup` and `main` functions, like in the simple usage above, with
+the difference that a command's `main` function receives the application matches
+and its command-specific matches:
+
+``` rust
+use getoptsargs::prelude::*;
+
+fn status_setup(builder: CommandBuilder) -> CommandBuilder {
+    builder
+}
+
+fn status_main(_app_matches: Matches, _command_matches: Matches) -> Result<i32> {
+    println!("ready");
+    Ok(0)
+}
+
+fn app_setup(builder: Builder) -> Builder {
+    builder.cmd("status", "print application status", status_setup, status_main)
+}
+
+app!("Example", app_setup, command_dispatcher);
+```
+
+Then, the special `command_dispatcher` function acts as the app's `main` method.
+
+Command-based applications automatically provide `help [command]` and
+`version` commands instead of the root `--help` and `--version` options.
+
+## More details
+
 Consult the documentation at <https://docs.rs/getoptsargs/> for the full API
 reference.
 
@@ -75,5 +111,7 @@ For functional sample programs, see the files under the [`examples`](examples)
 directory.  These will tell you:
 
 *   how to write sync and async applications,
+*   how to avoid macros,
+*   how to write command-based interfaces,
 *   how to use the `builder` to define options and arguments, and
 *   how to use the corresponding `matches` to access them after processing.

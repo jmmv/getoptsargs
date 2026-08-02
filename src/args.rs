@@ -11,6 +11,7 @@
 //! Positional argument parsing.
 
 use crate::errors::{UsageError, bad_usage};
+use crate::{Builder, CommandBuilder};
 use std::collections::HashMap;
 
 /// Start of the second column in usage messages.  Matches `getopts`.
@@ -90,6 +91,11 @@ pub struct Arguments {
 }
 
 impl Arguments {
+    /// Returns whether no positional or trailing arguments have been registered.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.positional_spec.is_empty() && self.trailing_spec.is_none()
+    }
+
     /// Registers the next positional argumet with `name` and `description`.
     pub fn positional(&mut self, name: &'static str, description: &'static str) {
         assert!(
@@ -221,7 +227,8 @@ macro_rules! impl_argument_builders {
     };
 }
 
-impl_argument_builders!(super::Builder);
+impl_argument_builders!(Builder);
+impl_argument_builders!(CommandBuilder);
 
 impl super::Matches {
     /// Returns the positional name identified by `name`.
@@ -238,6 +245,11 @@ impl super::Matches {
     #[inline(always)]
     pub fn arg_trail(&self) -> &[String] {
         self.args.trailing.as_slice()
+    }
+
+    /// Takes the trailing arguments after all registered positional arguments.
+    pub(crate) fn take_arg_trail(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.args.trailing)
     }
 }
 

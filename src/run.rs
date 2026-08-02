@@ -10,9 +10,10 @@
 
 //! Execution logic.
 
-use crate::{App, AppMetadata, Arguments, License, Matches, UsageError};
+use crate::{App, AppMetadata, Arguments, Command, CommandContext, License, Matches, UsageError};
 use anyhow::Result;
-use getopts::Options;
+use getopts::{Options, ParsingStyle};
+use std::collections::BTreeMap;
 use std::env;
 use std::error::Error;
 use std::io;
@@ -20,11 +21,28 @@ use std::path::Path;
 
 /// Configuration for rendering usage information.
 pub(crate) struct HelpConfig<'a> {
+    /// The application metadata.
+    pub(crate) metadata: AppMetadata,
+
     /// Positional and trailing argument definitions.
     pub(crate) args: &'a Arguments,
 
+    /// Command names and descriptions.
+    pub(crate) commands: &'a [(&'a str, &'a str)],
+
+    /// Additional help specific to this invocation.
+    pub(crate) extra_help: Option<fn(&mut dyn io::Write) -> io::Result<()>>,
+
     /// Option definitions.
     pub(crate) opts: &'a Options,
+
+    /// Usage placeholder for the option definitions.
+    pub(crate) options_placeholder: &'static str,
+}
+
+/// Returns whether `opts` contains any option definitions.
+pub(crate) fn options_defined(opts: &Options) -> bool {
+    opts.usage("").trim() != "Options:"
 }
 
 /// Consumes and returns the program name from `env::Args`.
@@ -49,31 +67,52 @@ pub(crate) fn program_name<S: Into<String>>(
 
 /// Prints usage information for `program_name` with `config` following the GNU Standards format.
 pub(crate) fn help(program_name: &str, config: HelpConfig<'_>) {
-    let mut brief = format!("Usage: {} [options]", program_name);
+    let mut brief = format!("Usage: {}", program_name);
+    let has_options = options_defined(config.opts);
+    if has_options {
+        brief.push(' ');
+        brief.push_str(config.options_placeholder);
+    }
     let args_usage = config.args.brief();
     if !args_usage.is_empty() {
         brief.push(' ');
         brief.push_str(&args_usage);
     }
+    if !config.commands.is_empty() {
+        brief.push_str(" command [arg...]");
+    }
 
-    println!("{}", config.opts.usage(&brief));
+    if has_options {
+        println!("{}", config.opts.usage(&brief));
+    } else {
+        println!("{}", brief);
+        println!();
+    }
     if !args_usage.is_empty() {
         println!("{}", config.args.usage());
     }
-}
 
-/// Prints application-specific details after application help.
-pub(crate) fn application_help(metadata: AppMetadata) {
-    if let Some(extra_help) = metadata.extra_help {
+    if !config.commands.is_empty() {
+        println!("Commands:");
+        for (name, description) in config.commands {
+            println!("    {:<20}{}", name, description);
+        }
+        println!();
+    }
+    if let Some(extra_help) = config.metadata.extra_help {
+        let _ = extra_help(&mut io::stdout().lock());
+        println!();
+    }
+    if let Some(extra_help) = config.extra_help {
         let _ = extra_help(&mut io::stdout().lock());
         println!();
     }
 
-    if let Some(bugs) = metadata.bugs {
+    if let Some(bugs) = config.metadata.bugs {
         println!("Report bugs to: {}", bugs);
     }
-    if let Some(homepage) = metadata.homepage {
-        println!("{} home page: {}", metadata.stylized_name, homepage);
+    if let Some(homepage) = config.metadata.homepage {
+        println!("{} home page: {}", config.metadata.stylized_name, homepage);
     }
 }
 
@@ -113,43 +152,68 @@ pub fn init_env_logger<P: Into<String>>(program_name: P) {
     builder.init()
 }
 
-/// Handles non-configurable options before program start (such as `--help` and `--version`).
-pub(crate) fn pre_run(
+/// Handles standard options and prepares application matches.
+pub(crate) fn pre_run<I>(
     app: &App,
-    opts: Options,
-    args: Arguments,
-    env_args: env::Args,
-) -> Result<Option<Matches>> {
-    let mut opt_matches = opts.parse(env_args)?;
-
-    if opt_matches.opt_present("help") {
-        help(&app.program_name, HelpConfig { opts: &opts, args: &args });
-        application_help(app.metadata);
-        return Ok(None);
-    }
-
-    if opt_matches.opt_present("version") {
-        version(
-            app.metadata.stylized_name,
-            app.metadata.version,
-            app.metadata.copyright,
-            app.metadata.license,
-        );
-        return Ok(None);
-    }
-
-    let arg_matches = args.parse(opt_matches.free.split_off(0))?;
+    mut opts: Options,
+    mut args: Arguments,
+    env_args: I,
+    commands: BTreeMap<&'static str, Command>,
+) -> Result<Option<Matches>>
+where
+    I: IntoIterator<Item = String>,
+{
+    let program_name = app.program_name.clone();
 
     #[cfg(feature = "env_logger")]
     if app.init_env_logger {
-        init_env_logger(&app.program_name);
+        init_env_logger(&program_name);
     }
 
-    Ok(Some(Matches {
-        program_name: app.program_name.clone(),
-        opts: opt_matches,
-        args: arg_matches,
-    }))
+    if commands.is_empty() {
+        opts.optflag("h", "help", "show command-line usage information and exit");
+        opts.optflag("", "version", "show version information and exit");
+    } else {
+        assert!(args.is_empty(), "Cannot register commands with root arguments");
+        args.trailing("_COMMAND_ARGS", 0, usize::MAX, "");
+        opts.parsing_style(ParsingStyle::StopAtFirstFree);
+    }
+    let mut opt_matches = opts.parse(env_args)?;
+
+    let context = if commands.is_empty() {
+        if opt_matches.opt_present("help") {
+            help(
+                &app.program_name,
+                HelpConfig {
+                    metadata: app.metadata,
+                    opts: &opts,
+                    args: &args,
+                    commands: &[],
+                    extra_help: None,
+                    options_placeholder: "[options]",
+                },
+            );
+            return Ok(None);
+        }
+
+        if opt_matches.opt_present("version") {
+            version(
+                app.metadata.stylized_name,
+                app.metadata.version,
+                app.metadata.copyright,
+                app.metadata.license,
+            );
+            return Ok(None);
+        }
+
+        None
+    } else {
+        Some(CommandContext { metadata: app.metadata, commands, opts })
+    };
+
+    let arg_matches = args.parse(opt_matches.free.split_off(0))?;
+
+    Ok(Some(Matches { program_name, opts: opt_matches, args: arg_matches, cmd_ctx: context }))
 }
 
 /// Prints a usage error `e` to stderr.
@@ -159,12 +223,16 @@ pub(crate) fn pre_run(
 /// that's what other option parsing libraries like to do.
 pub(crate) fn print_usage_error<E: Error>(app: &App, e: E) {
     eprintln!("Usage error: {}", e);
+    let help = if app.has_commands {
+        format!("{} help", app.program_name)
+    } else {
+        format!("{} --help", app.program_name)
+    };
     match app.manpage {
-        Some((page, section)) => eprintln!(
-            "Type `{} --help` or `man {} {}` for more information",
-            app.program_name, section, page
-        ),
-        None => eprintln!("Type `{} --help` for more information", app.program_name),
+        Some((page, section)) => {
+            eprintln!("Type `{}` or `man {} {}` for more information", help, section, page)
+        }
+        None => eprintln!("Type `{}` for more information", help),
     }
 }
 
