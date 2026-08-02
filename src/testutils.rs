@@ -18,15 +18,14 @@ use std::process;
 pub fn self_dir() -> PathBuf {
     let self_exe = env::current_exe().expect("Cannot get self's executable path");
     let dir = self_exe.parent().expect("Cannot get self's directory");
-    assert!(dir.ends_with("target/debug/deps") || dir.ends_with("target/release/deps"));
     dir.to_owned()
 }
 
 /// Computes the path to the built binary `name`.
 pub fn bin_path<P: AsRef<Path>>(name: P) -> PathBuf {
     let test_dir = self_dir();
-    let debug_or_release_dir = test_dir.parent().expect("Failed to get parent directory");
-    debug_or_release_dir.join(name).with_extension(env::consts::EXE_EXTENSION)
+    let profile_dir = test_dir.parent().expect("Failed to get parent directory");
+    profile_dir.join(name).with_extension(env::consts::EXE_EXTENSION)
 }
 
 /// Describes the behavior for one of the output streams (stdout, stderr) connected to a
