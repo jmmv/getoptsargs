@@ -6,6 +6,8 @@
 
 *   Modified error printing to show error chains, not just the last error.
 
+*   Added simple support for subcommand-based apps.
+
 ## Changes in version 0.2.1
 
 **Released on 2026-05-17.**

@@ -10,7 +10,7 @@
 
 //! Accessors for getopts.
 
-use crate::{Builder, Matches};
+use crate::{Builder, CommandBuilder, Matches};
 use getopts::{HasArg, Occur};
 use std::iter::IntoIterator;
 use std::str::FromStr;
@@ -103,6 +103,7 @@ macro_rules! impl_option_builders {
 }
 
 impl_option_builders!(Builder);
+impl_option_builders!(CommandBuilder);
 
 impl Matches {
     /// Trivial wrapper over `getopts::Matches::opt_defined`.

@@ -33,6 +33,10 @@
 //! arguments that the application exposes.  The `app_main` function contains the
 //! application's main program and is executed _after_ the command line arguments
 //! have been processed.
+//!
+//! For command-based applications, register commands with [`Builder::cmd`] and pass
+//! [`command_dispatcher`] as the final argument to [`app!`].  Command handlers
+//! receive both application-wide and command-specific matches.
 
 #![allow(clippy::collapsible_else_if)]
 #![warn(anonymous_parameters, bad_style, missing_docs)]
@@ -42,11 +46,16 @@
 use anyhow::Result;
 use getopts::Matches as OptionMatches;
 use getopts::Options;
+use std::collections::BTreeMap;
 use std::env;
 use std::io;
 
 mod args;
 use args::{Arguments, Matches as ArgumentMatches};
+
+pub mod commands;
+pub use commands::CommandBuilder;
+use commands::{Command, CommandContext};
 
 mod errors;
 use errors::UsageError;
@@ -63,7 +72,6 @@ mod run;
 pub mod testutils;
 
 /// Contains the result of options and arguments parsing.
-#[derive(Debug)]
 pub struct Matches {
     /// The program name.
     pub program_name: String,
@@ -73,6 +81,9 @@ pub struct Matches {
 
     /// The argument matches.
     args: ArgumentMatches,
+
+    /// For command-based apps, the necessary context to handle the `help` and `version` subcommands.
+    cmd_ctx: Option<CommandContext>,
 }
 
 /// Container for the metadata about the user-defined application.
@@ -92,6 +103,7 @@ struct App {
     metadata: AppMetadata,
     program_name: String,
     manpage: Option<(&'static str, &'static str)>,
+    has_commands: bool,
     #[cfg(feature = "env_logger")]
     init_env_logger: bool,
 }
@@ -103,6 +115,7 @@ pub struct Builder {
     env_args: env::Args,
     opts: Options,
     args: Arguments,
+    commands: BTreeMap<&'static str, Command>,
 }
 
 impl Builder {
@@ -122,9 +135,7 @@ impl Builder {
     pub fn new(stylized_name: &'static str, version: &'static str, env_args: env::Args) -> Self {
         let (program_name, env_args) = run::program_name(env_args, stylized_name.to_lowercase());
 
-        let mut opts = Options::new();
-        opts.optflag("h", "help", "show command-line usage information and exit");
-        opts.optflag("", "version", "show version information and exit");
+        let opts = Options::new();
 
         let license = License::from_cargo();
 
@@ -140,11 +151,12 @@ impl Builder {
             },
             program_name,
             manpage: None,
+            has_commands: false,
             #[cfg(feature = "env_logger")]
             init_env_logger: true,
         };
 
-        Self { app, env_args, opts, args: Arguments::default() }
+        Self { app, env_args, opts, args: Arguments::default(), commands: BTreeMap::new() }
     }
 
     /// Sets the bug reporting URL of the application to `bugs`.
@@ -161,7 +173,7 @@ impl Builder {
         self
     }
 
-    /// Registers a function that prints additional help when `--help` is requested.
+    /// Registers a function that prints additional help when help is requested.
     pub fn extra_help(mut self, extra_help: fn(&mut dyn io::Write) -> io::Result<()>) -> Self {
         self.app.metadata.extra_help = Some(extra_help);
         self
@@ -195,7 +207,7 @@ impl Builder {
     }
 
     /// Processes arguments as previously configured and handles standard non-configurable
-    /// options like `--help` or `--version`.
+    /// options like `--help` or `--version` for applications without commands.
     ///
     /// Returns `None` if the application should exit immediately _without_ error because one
     /// of the standard options was processed.  Otherwise, returns a `Matches` object with the
@@ -206,14 +218,14 @@ impl Builder {
     /// only to let you implement a completely imperative program without any flow control
     /// redirections.
     pub fn start(self) -> Result<Option<Matches>> {
-        run::pre_run(&self.app, self.opts, self.args, self.env_args)
+        run::pre_run(&self.app, self.opts, self.args, self.env_args, self.commands)
     }
 
     /// Starts the application delegating execution to `main`.
     ///
     /// Returns the exit code that the caller must propagate to the caller via `process::exit`.
     pub fn run(self, main: fn(Matches) -> Result<i32>) -> i32 {
-        match run::pre_run(&self.app, self.opts, self.args, self.env_args) {
+        match run::pre_run(&self.app, self.opts, self.args, self.env_args, self.commands) {
             Ok(None) => 0,
             Ok(Some(matches)) => match main(matches) {
                 Ok(code) => code,
@@ -225,7 +237,7 @@ impl Builder {
 
     /// Async version of `run`.
     pub async fn run_async<F: Future<Output = Result<i32>>>(self, main: fn(Matches) -> F) -> i32 {
-        match run::pre_run(&self.app, self.opts, self.args, self.env_args) {
+        match run::pre_run(&self.app, self.opts, self.args, self.env_args, self.commands) {
             Ok(None) => 0,
             Ok(Some(matches)) => match main(matches).await {
                 Ok(code) => code,

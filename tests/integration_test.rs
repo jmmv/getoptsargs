@@ -121,6 +121,251 @@ Type `minimal --help` for more information
 }
 
 #[test]
+fn test_commands_dispatch() {
+    check(
+        bin_path("examples/commands"),
+        &["--verbose", "echo", "--uppercase", "hello"],
+        0,
+        Behavior::Inline("verbose\nHELLO\n".to_owned()),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/commands"),
+        &["status"],
+        0,
+        Behavior::Inline("ready\n".to_owned()),
+        Behavior::Null,
+    );
+}
+
+#[test]
+fn test_commands_help_and_version() {
+    check(
+        bin_path("examples/commands"),
+        &["help"],
+        0,
+        Behavior::Inline(
+            "Usage: commands [options] command [arg...]
+
+Options:
+    -v, --verbose       print additional information
+
+Commands:
+    echo                print a message
+    help                show command-line usage information
+    status              print application status
+    version             show version information
+
+Report bugs to: https://example.com/commands/issues/
+commands home page: https://commands.example.com/
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/commands"),
+        &["--help"],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            "Usage error: Unrecognized option: 'help'
+Type `commands help` for more information
+"
+            .to_owned(),
+        ),
+    );
+    check(
+        bin_path("examples/commands"),
+        &["--version"],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            "Usage error: Unrecognized option: 'version'
+Type `commands help` for more information
+"
+            .to_owned(),
+        ),
+    );
+    check(
+        bin_path("examples/commands"),
+        &["echo", "--help"],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            "Usage error: Unrecognized option: 'help'
+Type `commands help` for more information
+"
+            .to_owned(),
+        ),
+    );
+    check(
+        bin_path("examples/commands"),
+        &["help", "echo"],
+        0,
+        Behavior::Inline(
+            "Usage: commands [options] echo [command options] message
+
+Options:
+    -u, --uppercase     print the message in uppercase
+
+Arguments:
+    message             message to print
+
+The message is written to standard output.
+
+Report bugs to: https://example.com/commands/issues/
+commands home page: https://commands.example.com/
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/commands"),
+        &["help", "status"],
+        0,
+        Behavior::Inline(
+            "Usage: commands [options] status
+\nReport bugs to: https://example.com/commands/issues/
+commands home page: https://commands.example.com/
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/commands"),
+        &["help", "help"],
+        0,
+        Behavior::Inline(
+            "Usage: commands [options] help [command]
+
+Arguments:
+    [command]           command to show help for
+
+Report bugs to: https://example.com/commands/issues/
+commands home page: https://commands.example.com/
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/commands"),
+        &["help", "version"],
+        0,
+        Behavior::Inline(
+            "Usage: commands [options] version
+\nReport bugs to: https://example.com/commands/issues/
+commands home page: https://commands.example.com/
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/commands"),
+        &["version"],
+        0,
+        Behavior::Inline(format!("commands {}\n", env!("CARGO_PKG_VERSION"))),
+        Behavior::Null,
+    );
+}
+
+#[test]
+fn test_commands_errors() {
+    check(
+        bin_path("examples/commands"),
+        &[],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            "Usage error: No command provided
+Type `commands help` for more information
+"
+            .to_owned(),
+        ),
+    );
+    check(
+        bin_path("examples/commands"),
+        &["unknown"],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            "Usage error: Unknown command `unknown`
+Type `commands help` for more information
+"
+            .to_owned(),
+        ),
+    );
+    check(
+        bin_path("examples/commands"),
+        &["help", "unknown"],
+        2,
+        Behavior::Null,
+        Behavior::Inline(
+            "Usage error: Unknown command `unknown`
+Type `commands help` for more information
+"
+            .to_owned(),
+        ),
+    );
+}
+
+#[test]
+fn test_async_commands_dispatch() {
+    check(
+        bin_path("examples/async_commands"),
+        &["greet", "Ada"],
+        0,
+        Behavior::Inline("hello Ada\n".to_owned()),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/async_commands"),
+        &["status"],
+        0,
+        Behavior::Inline("ready\n".to_owned()),
+        Behavior::Null,
+    );
+}
+
+#[test]
+fn test_async_commands_help() {
+    check(
+        bin_path("examples/async_commands"),
+        &["help"],
+        0,
+        Behavior::Inline(
+            "Usage: async_commands command [arg...]
+
+Commands:
+    greet               greet a user
+    help                show command-line usage information
+    status              print application status
+    version             show version information
+
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+    check(
+        bin_path("examples/async_commands"),
+        &["help", "status"],
+        0,
+        Behavior::Inline(
+            "Usage: async_commands status
+
+"
+            .to_owned(),
+        ),
+        Behavior::Null,
+    );
+}
+
+#[test]
 fn test_everything_no_args_no_output() {
     check(
         bin_path("examples/everything"),
@@ -205,11 +450,11 @@ fn test_everything_help() {
             "Usage: everything [options] first second third_has_a_very_long_name [name1 .. nameN]
 
 Options:
-    -h, --help          show command-line usage information and exit
-        --version       show version information and exit
     -p, --print-args    print free arguments
         --raise-chain   raises an error with causes
         --raise-error   raises an explicit usage error
+    -h, --help          show command-line usage information and exit
+        --version       show version information and exit
 
 Arguments:
     first               this is the first required argument and contains a
@@ -261,9 +506,9 @@ fn test_imperative_help() {
             "Usage: imperative [options] [trail1 .. trailN]
 
 Options:
+        --print-args    print free arguments
     -h, --help          show command-line usage information and exit
         --version       show version information and exit
-        --print-args    print free arguments
 
 Arguments:
     [trail1 .. trailN]  free arguments
