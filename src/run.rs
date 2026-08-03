@@ -10,7 +10,7 @@
 
 //! Execution logic.
 
-use crate::{App, Arguments, License, Matches, UsageError};
+use crate::{App, AppMetadata, Arguments, License, Matches, UsageError};
 use anyhow::Result;
 use getopts::Options;
 use std::env;
@@ -40,7 +40,7 @@ pub(crate) fn program_name<S: Into<String>>(
 
 /// Prints usage information for program `name` with `opts` following the GNU Standards format.
 pub(crate) fn help(
-    stylized_name: &str,
+    metadata: AppMetadata,
     program_name: &str,
     bugs: Option<&str>,
     homepage: Option<&str>,
@@ -69,7 +69,7 @@ pub(crate) fn help(
         println!("Report bugs to: {}", bugs);
     }
     if let Some(homepage) = homepage {
-        println!("{} home page: {}", stylized_name, homepage);
+        println!("{} home page: {}", metadata.stylized_name, homepage);
     }
 }
 
@@ -120,11 +120,11 @@ pub(crate) fn pre_run(
 
     if opt_matches.opt_present("help") {
         help(
-            app.stylized_name,
+            app.metadata,
             &app.program_name,
-            app.bugs,
-            app.homepage,
-            app.extra_help,
+            app.metadata.bugs,
+            app.metadata.homepage,
+            app.metadata.extra_help,
             &opts,
             &args,
         );
@@ -132,7 +132,12 @@ pub(crate) fn pre_run(
     }
 
     if opt_matches.opt_present("version") {
-        version(app.stylized_name, app.version, app.copyright, app.license);
+        version(
+            app.metadata.stylized_name,
+            app.metadata.version,
+            app.metadata.copyright,
+            app.metadata.license,
+        );
         return Ok(None);
     }
 
