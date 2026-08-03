@@ -76,16 +76,22 @@ pub struct Matches {
 }
 
 /// Container for the metadata about the user-defined application.
-struct App {
+#[derive(Clone, Copy)]
+struct AppMetadata {
     stylized_name: &'static str,
     version: &'static str,
-    program_name: String,
     copyright: Option<&'static str>,
     license: Option<License>,
-    manpage: Option<(&'static str, &'static str)>,
     homepage: Option<&'static str>,
     bugs: Option<&'static str>,
     extra_help: Option<fn(&mut dyn io::Write) -> io::Result<()>>,
+}
+
+/// Container for the user-defined application.
+struct App {
+    metadata: AppMetadata,
+    program_name: String,
+    manpage: Option<(&'static str, &'static str)>,
     #[cfg(feature = "env_logger")]
     init_env_logger: bool,
 }
@@ -123,15 +129,17 @@ impl Builder {
         let license = License::from_cargo();
 
         let app = App {
-            stylized_name,
-            version,
+            metadata: AppMetadata {
+                stylized_name,
+                version,
+                copyright: None,
+                license,
+                homepage: None,
+                bugs: None,
+                extra_help: None,
+            },
             program_name,
-            copyright: None,
-            license,
             manpage: None,
-            homepage: None,
-            bugs: None,
-            extra_help: None,
             #[cfg(feature = "env_logger")]
             init_env_logger: true,
         };
@@ -141,7 +149,7 @@ impl Builder {
 
     /// Sets the bug reporting URL of the application to `bugs`.
     pub fn bugs(mut self, bugs: &'static str) -> Self {
-        self.app.bugs = Some(bugs);
+        self.app.metadata.bugs = Some(bugs);
         self
     }
 
@@ -149,25 +157,25 @@ impl Builder {
     /// with `Copyright `.
     pub fn copyright(mut self, copyright: &'static str) -> Self {
         assert!(copyright.starts_with("Copyright "));
-        self.app.copyright = Some(copyright);
+        self.app.metadata.copyright = Some(copyright);
         self
     }
 
     /// Registers a function that prints additional help when `--help` is requested.
     pub fn extra_help(mut self, extra_help: fn(&mut dyn io::Write) -> io::Result<()>) -> Self {
-        self.app.extra_help = Some(extra_help);
+        self.app.metadata.extra_help = Some(extra_help);
         self
     }
 
     /// Sets the homepage of the application to `homepage`.
     pub fn homepage(mut self, homepage: &'static str) -> Self {
-        self.app.homepage = Some(homepage);
+        self.app.metadata.homepage = Some(homepage);
         self
     }
 
     /// Sets the license of the application to `license`.
     pub fn license(mut self, license: License) -> Self {
-        self.app.license = Some(license);
+        self.app.metadata.license = Some(license);
         self
     }
 
