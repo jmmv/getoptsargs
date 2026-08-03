@@ -15,64 +15,94 @@ use getopts::{HasArg, Occur};
 use std::iter::IntoIterator;
 use std::str::FromStr;
 
-impl Builder {
-    /// Trivial wrapper over `getopts::Options::opt`.
-    #[inline(always)]
-    pub fn opt(
-        mut self,
-        short_name: &str,
-        long_name: &str,
-        desc: &str,
-        hint: &str,
-        hasarg: HasArg,
-        occur: Occur,
-    ) -> Self {
-        self.opts.opt(short_name, long_name, desc, hint, hasarg, occur);
-        self
-    }
+macro_rules! impl_option_builders {
+    ($builder:ty) => {
+        impl $builder {
+            /// Trivial wrapper over `getopts::Options::opt`.
+            #[inline(always)]
+            pub fn opt(
+                mut self,
+                short_name: &str,
+                long_name: &str,
+                desc: &str,
+                hint: &str,
+                hasarg: HasArg,
+                occur: Occur,
+            ) -> Self {
+                self.opts.opt(short_name, long_name, desc, hint, hasarg, occur);
+                self
+            }
 
-    /// Trivial wrapper over `getopts::Options::optflag`.
-    #[inline(always)]
-    pub fn optflag(mut self, short_name: &str, long_name: &str, desc: &str) -> Self {
-        self.opts.optflag(short_name, long_name, desc);
-        self
-    }
+            /// Trivial wrapper over `getopts::Options::optflag`.
+            #[inline(always)]
+            pub fn optflag(mut self, short_name: &str, long_name: &str, desc: &str) -> Self {
+                self.opts.optflag(short_name, long_name, desc);
+                self
+            }
 
-    /// Trivial wrapper over `getopts::Options::optflagmulti`.
-    #[inline(always)]
-    pub fn optflagmulti(mut self, short_name: &str, long_name: &str, desc: &str) -> Self {
-        self.opts.optflagmulti(short_name, long_name, desc);
-        self
-    }
+            /// Trivial wrapper over `getopts::Options::optflagmulti`.
+            #[inline(always)]
+            pub fn optflagmulti(mut self, short_name: &str, long_name: &str, desc: &str) -> Self {
+                self.opts.optflagmulti(short_name, long_name, desc);
+                self
+            }
 
-    /// Trivial wrapper over `getopts::Options::optflagopt`.
-    #[inline(always)]
-    pub fn optflagopt(mut self, short_name: &str, long_name: &str, desc: &str, hint: &str) -> Self {
-        self.opts.optflagopt(short_name, long_name, desc, hint);
-        self
-    }
+            /// Trivial wrapper over `getopts::Options::optflagopt`.
+            #[inline(always)]
+            pub fn optflagopt(
+                mut self,
+                short_name: &str,
+                long_name: &str,
+                desc: &str,
+                hint: &str,
+            ) -> Self {
+                self.opts.optflagopt(short_name, long_name, desc, hint);
+                self
+            }
 
-    /// Trivial wrapper over `getopts::Options::optmulti`.
-    #[inline(always)]
-    pub fn optmulti(mut self, short_name: &str, long_name: &str, desc: &str, hint: &str) -> Self {
-        self.opts.optmulti(short_name, long_name, desc, hint);
-        self
-    }
+            /// Trivial wrapper over `getopts::Options::optmulti`.
+            #[inline(always)]
+            pub fn optmulti(
+                mut self,
+                short_name: &str,
+                long_name: &str,
+                desc: &str,
+                hint: &str,
+            ) -> Self {
+                self.opts.optmulti(short_name, long_name, desc, hint);
+                self
+            }
 
-    /// Trivial wrapper over `getopts::Options::optopt`.
-    #[inline(always)]
-    pub fn optopt(mut self, short_name: &str, long_name: &str, desc: &str, hint: &str) -> Self {
-        self.opts.optopt(short_name, long_name, desc, hint);
-        self
-    }
+            /// Trivial wrapper over `getopts::Options::optopt`.
+            #[inline(always)]
+            pub fn optopt(
+                mut self,
+                short_name: &str,
+                long_name: &str,
+                desc: &str,
+                hint: &str,
+            ) -> Self {
+                self.opts.optopt(short_name, long_name, desc, hint);
+                self
+            }
 
-    /// Trivial wrapper over `getopts::Options::reqopt`.
-    #[inline(always)]
-    pub fn reqopt(mut self, short_name: &str, long_name: &str, desc: &str, hint: &str) -> Self {
-        self.opts.reqopt(short_name, long_name, desc, hint);
-        self
-    }
+            /// Trivial wrapper over `getopts::Options::reqopt`.
+            #[inline(always)]
+            pub fn reqopt(
+                mut self,
+                short_name: &str,
+                long_name: &str,
+                desc: &str,
+                hint: &str,
+            ) -> Self {
+                self.opts.reqopt(short_name, long_name, desc, hint);
+                self
+            }
+        }
+    };
 }
+
+impl_option_builders!(Builder);
 
 impl Matches {
     /// Trivial wrapper over `getopts::Matches::opt_defined`.
