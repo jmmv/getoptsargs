@@ -18,6 +18,15 @@ use std::error::Error;
 use std::io;
 use std::path::Path;
 
+/// Configuration for rendering usage information.
+pub(crate) struct HelpConfig<'a> {
+    /// Positional and trailing argument definitions.
+    pub(crate) args: &'a Arguments,
+
+    /// Option definitions.
+    pub(crate) opts: &'a Options,
+}
+
 /// Consumes and returns the program name from `env::Args`.
 ///
 /// If the program name cannot be obtained, return `default_name` instead.
@@ -38,37 +47,32 @@ pub(crate) fn program_name<S: Into<String>>(
     (name, args)
 }
 
-/// Prints usage information for program `name` with `opts` following the GNU Standards format.
-pub(crate) fn help(
-    metadata: AppMetadata,
-    program_name: &str,
-    bugs: Option<&str>,
-    homepage: Option<&str>,
-    extra_help: Option<fn(&mut dyn io::Write) -> io::Result<()>>,
-    opts: &Options,
-    args: &Arguments,
-) {
+/// Prints usage information for `program_name` with `config` following the GNU Standards format.
+pub(crate) fn help(program_name: &str, config: HelpConfig<'_>) {
     let mut brief = format!("Usage: {} [options]", program_name);
-    let args_usage = args.brief();
+    let args_usage = config.args.brief();
     if !args_usage.is_empty() {
         brief.push(' ');
         brief.push_str(&args_usage);
     }
 
-    println!("{}", opts.usage(&brief));
+    println!("{}", config.opts.usage(&brief));
     if !args_usage.is_empty() {
-        println!("{}", args.usage());
+        println!("{}", config.args.usage());
     }
+}
 
-    if let Some(extra_help) = extra_help {
+/// Prints application-specific details after application help.
+pub(crate) fn application_help(metadata: AppMetadata) {
+    if let Some(extra_help) = metadata.extra_help {
         let _ = extra_help(&mut io::stdout().lock());
         println!();
     }
 
-    if let Some(bugs) = bugs {
+    if let Some(bugs) = metadata.bugs {
         println!("Report bugs to: {}", bugs);
     }
-    if let Some(homepage) = homepage {
+    if let Some(homepage) = metadata.homepage {
         println!("{} home page: {}", metadata.stylized_name, homepage);
     }
 }
@@ -119,15 +123,8 @@ pub(crate) fn pre_run(
     let mut opt_matches = opts.parse(env_args)?;
 
     if opt_matches.opt_present("help") {
-        help(
-            app.metadata,
-            &app.program_name,
-            app.metadata.bugs,
-            app.metadata.homepage,
-            app.metadata.extra_help,
-            &opts,
-            &args,
-        );
+        help(&app.program_name, HelpConfig { opts: &opts, args: &args });
+        application_help(app.metadata);
         return Ok(None);
     }
 
