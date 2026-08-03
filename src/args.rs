@@ -197,25 +197,31 @@ impl Arguments {
     }
 }
 
-impl super::Builder {
-    /// Trivial wrapper over `Arguments::positional`.
-    pub fn posarg(mut self, name: &'static str, description: &'static str) -> Self {
-        self.args.positional(name, description);
-        self
-    }
+macro_rules! impl_argument_builders {
+    ($builder:ty) => {
+        impl $builder {
+            /// Trivial wrapper over `Arguments::positional`.
+            pub fn posarg(mut self, name: &'static str, description: &'static str) -> Self {
+                self.args.positional(name, description);
+                self
+            }
 
-    /// Trivial wrapper over `Arguments::trailing`.
-    pub fn trailarg(
-        mut self,
-        name: &'static str,
-        min: usize,
-        max: usize,
-        description: &'static str,
-    ) -> Self {
-        self.args.trailing(name, min, max, description);
-        self
-    }
+            /// Trivial wrapper over `Arguments::trailing`.
+            pub fn trailarg(
+                mut self,
+                name: &'static str,
+                min: usize,
+                max: usize,
+                description: &'static str,
+            ) -> Self {
+                self.args.trailing(name, min, max, description);
+                self
+            }
+        }
+    };
 }
+
+impl_argument_builders!(super::Builder);
 
 impl super::Matches {
     /// Returns the positional name identified by `name`.
