@@ -4,7 +4,7 @@
 
 **STILL UNDER DEVELOPMENT; NOT RELEASED YET.**
 
-*   No changes recorded.
+*   Modified error printing to show error chains, not just the last error.
 
 ## Changes in version 0.2.1
 
