@@ -26,6 +26,7 @@ fn app_setup(builder: Builder) -> Builder {
         .extra_help(app_extra_help)
         // Configure option processing.
         .optflag("p", "print-args", "print free arguments")
+        .optflag("", "raise-chain", "raises an error with causes")
         .optflag("", "raise-error", "raises an explicit usage error")
         // Configure argument processing.
         .posarg("first", "this is the first required argument and contains a very long description")
@@ -35,6 +36,12 @@ fn app_setup(builder: Builder) -> Builder {
 }
 
 fn app_main(matches: Matches) -> Result<i32> {
+    if matches.opt_present("raise-chain") {
+        return Err(anyhow!("Innermost problem")
+            .context("Intermediate problem")
+            .context("Outermost problem"));
+    }
+
     if matches.opt_present("raise-error") {
         return Err(bad_usage!("Found raise-error flag").into());
     }

@@ -168,6 +168,11 @@ pub(crate) fn print_usage_error<E: Error>(app: &App, e: E) {
 
 /// Handles the error returned from the app's main function, printing it to the console in the
 /// correct form and transforming it to the exit status to return to the user.
+///
+/// Errors that are not usage errors are printed with all of their causes, separated by colons,
+/// because the outermost message alone rarely says why anything failed: an app that reports
+/// "cannot open the configuration file" is only useful when it also says that the file is not
+/// there.  Usage errors have no causes to print, being about what the user typed.
 pub(crate) fn handle_error(app: &App, e: anyhow::Error) -> i32 {
     if let Some(e) = e.downcast_ref::<UsageError>() {
         print_usage_error(app, e);
@@ -176,7 +181,7 @@ pub(crate) fn handle_error(app: &App, e: anyhow::Error) -> i32 {
         print_usage_error(app, e);
         2
     } else {
-        eprintln!("{}: {}", app.program_name, e);
+        eprintln!("{}: {:#}", app.program_name, e);
         1
     }
 }
