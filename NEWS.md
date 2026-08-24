@@ -2,7 +2,7 @@
 
 ## Changes in version 0.3.0
 
-**STILL UNDER DEVELOPMENT; NOT RELEASED YET.**
+**Released on 2026-08-24.**
 
 *   Modified error printing to show error chains, not just the last error.
 
