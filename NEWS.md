@@ -1,5 +1,13 @@
 # Major changes between releases
 
+## Changes in version 0.4.0
+
+**Released on 2026-08-30.**
+
+*   Removed the (public) `testutils` module, which should have never been
+    part of this crate's public API.  The integration tests now use
+    `assert_cmd`.
+
 ## Changes in version 0.3.0
 
 **Released on 2026-08-24.**
