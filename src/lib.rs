@@ -69,8 +69,6 @@ pub mod prelude;
 
 mod run;
 
-pub mod testutils;
-
 /// Contains the result of options and arguments parsing.
 pub struct Matches {
     /// The program name.
