@@ -43,18 +43,28 @@ id = "trailing-whitespace"
 repo = "local"
 
 [[repos.hooks]]
+id = "cargo-clippy"
+name = "Check Rust clippy"
+language = "system"
+entry = "cargo"
+args = ["clippy", "--all-features", "--all-targets", "--", "-D", "warnings"]
+pass_filenames = false
+always_run = true
+
+[[repos.hooks]]
+id = "cargo-fmt"
+name = "Check Rust fmt"
+language = "system"
+entry = "cargo"
+args = ["fmt", "--", "--check"]
+pass_filenames = false
+always_run = true
+
+[[repos.hooks]]
 id = "do-not-submit"
 name = "Check for [D]O NOT SUBMIT markers"
 language = "system"
 entry = "sh"
 args = ["-c", '! grep -rn "[D]O NOT SUBMIT" --exclude-dir=.git --exclude-dir=target .']
-pass_filenames = false
-always_run = true
-
-[[repos.hooks]]
-id = "cargo-rust"
-name = "Check Rust code (clippy + fmt)"
-language = "script"
-entry = "admin/check-rust.sh"
 pass_filenames = false
 always_run = true
