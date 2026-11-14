@@ -22,6 +22,7 @@ getopts = "0.2.24"
 
 [dev-dependencies]
 assert_cmd = "2"
+escargot = "0.5"
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
 
 [[example]]

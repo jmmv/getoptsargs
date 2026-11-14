@@ -14,21 +14,38 @@
 #![warn(unused, unused_extern_crates, unused_import_braces, unused_qualifications)]
 #![warn(unsafe_code)]
 
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::LazyLock;
+
 use assert_cmd::Command;
+use escargot::CargoBuild;
+
+fn example_command(name: &str) -> Command {
+    static EXAMPLES: LazyLock<HashMap<&str, PathBuf>> = LazyLock::new(|| {
+        ["async", "async_commands", "commands", "everything", "imperative", "minimal"]
+            .into_iter()
+            .map(|name| {
+                let mut build = CargoBuild::new().example(name).current_release().current_target();
+                if cfg!(feature = "env_logger") {
+                    build = build.features("env_logger");
+                }
+                let executable = build.run().unwrap();
+                (name, executable.path().to_path_buf())
+            })
+            .collect()
+    });
+    Command::new(&EXAMPLES[name])
+}
+
 #[test]
 fn test_async_no_args_no_output() {
-    Command::cargo_bin("examples/async")
-        .expect("Failed to find example executable")
-        .assert()
-        .code(0)
-        .stdout("")
-        .stderr("");
+    example_command("async").assert().code(0).stdout("").stderr("");
 }
 
 #[test]
 fn test_async_help() {
-    Command::cargo_bin("examples/async")
-        .expect("Failed to find example executable")
+    example_command("async")
         .args(["--help"])
         .assert()
         .code(0)
@@ -47,8 +64,7 @@ Options:
 
 #[test]
 fn test_async_version() {
-    Command::cargo_bin("examples/async")
-        .expect("Failed to find example executable")
+    example_command("async")
         .args(["--version"])
         .assert()
         .code(0)
@@ -58,34 +74,22 @@ fn test_async_version() {
 
 #[test]
 fn test_async_too_many_args_args_no_output() {
-    Command::cargo_bin("examples/async")
-        .expect("Failed to find example executable")
-        .args(["foo"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: Too many arguments
+    example_command("async").args(["foo"]).assert().code(2).stdout("").stderr(
+        "Usage error: Too many arguments
 Type `async --help` for more information
 "
-            .to_owned(),
-        );
+        .to_owned(),
+    );
 }
 
 #[test]
 fn test_minimal_no_args_no_output() {
-    Command::cargo_bin("examples/minimal")
-        .expect("Failed to find example executable")
-        .assert()
-        .code(0)
-        .stdout("")
-        .stderr("");
+    example_command("minimal").assert().code(0).stdout("").stderr("");
 }
 
 #[test]
 fn test_minimal_help() {
-    Command::cargo_bin("examples/minimal")
-        .expect("Failed to find example executable")
+    example_command("minimal")
         .args(["--help"])
         .assert()
         .code(0)
@@ -104,8 +108,7 @@ Options:
 
 #[test]
 fn test_minimal_version() {
-    Command::cargo_bin("examples/minimal")
-        .expect("Failed to find example executable")
+    example_command("minimal")
         .args(["--version"])
         .assert()
         .code(0)
@@ -115,31 +118,23 @@ fn test_minimal_version() {
 
 #[test]
 fn test_minimal_too_many_args_args_no_output() {
-    Command::cargo_bin("examples/minimal")
-        .expect("Failed to find example executable")
-        .args(["foo"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: Too many arguments
+    example_command("minimal").args(["foo"]).assert().code(2).stdout("").stderr(
+        "Usage error: Too many arguments
 Type `minimal --help` for more information
 "
-            .to_owned(),
-        );
+        .to_owned(),
+    );
 }
 
 #[test]
 fn test_commands_dispatch() {
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+    example_command("commands")
         .args(["--verbose", "echo", "--uppercase", "hello"])
         .assert()
         .code(0)
         .stdout("verbose\nHELLO\n".to_owned())
         .stderr("");
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+    example_command("commands")
         .args(["status"])
         .assert()
         .code(0)
@@ -149,8 +144,7 @@ fn test_commands_dispatch() {
 
 #[test]
 fn test_commands_help_and_version() {
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+    example_command("commands")
         .args(["help"])
         .assert()
         .code(0)
@@ -172,44 +166,25 @@ commands home page: https://commands.example.com/
             .to_owned(),
         )
         .stderr("");
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
-        .args(["--help"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: Unrecognized option: 'help'
+    example_command("commands").args(["--help"]).assert().code(2).stdout("").stderr(
+        "Usage error: Unrecognized option: 'help'
 Type `commands help` for more information
 "
-            .to_owned(),
-        );
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
-        .args(["--version"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: Unrecognized option: 'version'
+        .to_owned(),
+    );
+    example_command("commands").args(["--version"]).assert().code(2).stdout("").stderr(
+        "Usage error: Unrecognized option: 'version'
 Type `commands help` for more information
 "
-            .to_owned(),
-        );
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
-        .args(["echo", "--help"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: Unrecognized option: 'help'
+        .to_owned(),
+    );
+    example_command("commands").args(["echo", "--help"]).assert().code(2).stdout("").stderr(
+        "Usage error: Unrecognized option: 'help'
 Type `commands help` for more information
 "
-            .to_owned(),
-        );
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+        .to_owned(),
+    );
+    example_command("commands")
         .args(["help", "echo"])
         .assert()
         .code(0)
@@ -230,8 +205,7 @@ commands home page: https://commands.example.com/
             .to_owned(),
         )
         .stderr("");
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+    example_command("commands")
         .args(["help", "status"])
         .assert()
         .code(0)
@@ -243,8 +217,7 @@ commands home page: https://commands.example.com/
             .to_owned(),
         )
         .stderr("");
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+    example_command("commands")
         .args(["help", "help"])
         .assert()
         .code(0)
@@ -260,8 +233,7 @@ commands home page: https://commands.example.com/
             .to_owned(),
         )
         .stderr("");
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+    example_command("commands")
         .args(["help", "version"])
         .assert()
         .code(0)
@@ -273,8 +245,7 @@ commands home page: https://commands.example.com/
             .to_owned(),
         )
         .stderr("");
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
+    example_command("commands")
         .args(["version"])
         .assert()
         .code(0)
@@ -284,54 +255,35 @@ commands home page: https://commands.example.com/
 
 #[test]
 fn test_commands_errors() {
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: No command provided
+    example_command("commands").assert().code(2).stdout("").stderr(
+        "Usage error: No command provided
 Type `commands help` for more information
 "
-            .to_owned(),
-        );
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
-        .args(["unknown"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: Unknown command `unknown`
+        .to_owned(),
+    );
+    example_command("commands").args(["unknown"]).assert().code(2).stdout("").stderr(
+        "Usage error: Unknown command `unknown`
 Type `commands help` for more information
 "
-            .to_owned(),
-        );
-    Command::cargo_bin("examples/commands")
-        .expect("Failed to find example executable")
-        .args(["help", "unknown"])
-        .assert()
-        .code(2)
-        .stdout("")
-        .stderr(
-            "Usage error: Unknown command `unknown`
+        .to_owned(),
+    );
+    example_command("commands").args(["help", "unknown"]).assert().code(2).stdout("").stderr(
+        "Usage error: Unknown command `unknown`
 Type `commands help` for more information
 "
-            .to_owned(),
-        );
+        .to_owned(),
+    );
 }
 
 #[test]
 fn test_async_commands_dispatch() {
-    Command::cargo_bin("examples/async_commands")
-        .expect("Failed to find example executable")
+    example_command("async_commands")
         .args(["greet", "Ada"])
         .assert()
         .code(0)
         .stdout("hello Ada\n".to_owned())
         .stderr("");
-    Command::cargo_bin("examples/async_commands")
-        .expect("Failed to find example executable")
+    example_command("async_commands")
         .args(["status"])
         .assert()
         .code(0)
@@ -341,8 +293,7 @@ fn test_async_commands_dispatch() {
 
 #[test]
 fn test_async_commands_help() {
-    Command::cargo_bin("examples/async_commands")
-        .expect("Failed to find example executable")
+    example_command("async_commands")
         .args(["help"])
         .assert()
         .code(0)
@@ -359,8 +310,7 @@ Commands:
             .to_owned(),
         )
         .stderr("");
-    Command::cargo_bin("examples/async_commands")
-        .expect("Failed to find example executable")
+    example_command("async_commands")
         .args(["help", "status"])
         .assert()
         .code(0)
@@ -375,19 +325,12 @@ Commands:
 
 #[test]
 fn test_everything_no_args_no_output() {
-    Command::cargo_bin("examples/everything")
-        .expect("Failed to find example executable")
-        .args(["a", "b", "c", "d"])
-        .assert()
-        .code(0)
-        .stdout("")
-        .stderr("");
+    example_command("everything").args(["a", "b", "c", "d"]).assert().code(0).stdout("").stderr("");
 }
 
 #[test]
 fn test_everything_custom_flag() {
-    Command::cargo_bin("examples/everything")
-        .expect("Failed to find example executable")
+    example_command("everything")
         .args(["-p", "abc", "de fg", "h", "f1"])
         .assert()
         .code(42)
@@ -401,8 +344,7 @@ File name: f1
         )
         .stderr("");
 
-    Command::cargo_bin("examples/everything")
-        .expect("Failed to find example executable")
+    example_command("everything")
         .args(["--print-args", "abc", "de fg", "h", "f1", "f2", "f3"])
         .assert()
         .code(42)
@@ -421,8 +363,7 @@ File name: f3
 
 #[test]
 fn test_everything_raise_error() {
-    Command::cargo_bin("examples/everything")
-        .expect("Failed to find example executable")
+    example_command("everything")
         .args(["--raise-error", "p1", "p2", "p3"])
         .assert()
         .code(2)
@@ -437,8 +378,7 @@ Type `everything --help` or `man 8 the-everything` for more information
 
 #[test]
 fn test_everything_raise_chain() {
-    Command::cargo_bin("examples/everything")
-        .expect("Failed to find example executable")
+    example_command("everything")
         .args(["--raise-chain", "p1", "p2", "p3"])
         .assert()
         .code(1)
@@ -450,8 +390,7 @@ fn test_everything_raise_chain() {
 
 #[test]
 fn test_everything_help() {
-    Command::cargo_bin("examples/everything")
-        .expect("Failed to find example executable")
+    example_command("everything")
         .args(["--help"])
         .assert()
         .code(0)
@@ -485,19 +424,12 @@ Everything home page: https://everything.example.com/
 
 #[test]
 fn test_imperative_no_args_no_output() {
-    Command::cargo_bin("examples/imperative")
-        .expect("Failed to find example executable")
-        .args(["a"])
-        .assert()
-        .code(0)
-        .stdout("")
-        .stderr("");
+    example_command("imperative").args(["a"]).assert().code(0).stdout("").stderr("");
 }
 
 #[test]
 fn test_imperative_custom_flag() {
-    Command::cargo_bin("examples/imperative")
-        .expect("Failed to find example executable")
+    example_command("imperative")
         .args(["--print-args", "abc", "de fg"])
         .assert()
         .code(0)
@@ -512,8 +444,7 @@ Free argument: de fg
 
 #[test]
 fn test_imperative_help() {
-    Command::cargo_bin("examples/imperative")
-        .expect("Failed to find example executable")
+    example_command("imperative")
         .args(["--help"])
         .assert()
         .code(0)
